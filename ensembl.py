@@ -1,5 +1,4 @@
 from collections import defaultdict
-from enum import Enum
 from functools import singledispatch, singledispatchmethod
 from urllib.parse import urljoin
 
@@ -7,29 +6,23 @@ import requests
 from requests.adapters import HTTPAdapter, Retry
 
 
-class ContentType(Enum):
-    json = "application/json"
-    xml = "text/xml"
-    nh = "text/x-nh"
-    phyloxml = "text/x-phyloxml+xml"
-    orthoxml = "text/x-orthoxml+xml"
-    gff3 = "text/x-gff3"
-    fasta = "text/x-fasta"
-    bed = "text/x-bed"
-    seqxml = "text/x-seqxml+xml"
-    text = "text/plain"
-    yaml = "text/x-yaml"
-    jsonp = "text/javascript"
-
-
-headers = defaultdict(str)
 assembly = "GRCh38"
 scheme = "https"
 
 
-def content_type(format):
-    headers["Content-Type"] = ContentType[format].value
-    return headers
+media_type = dict(
+    json="application/json",
+    xml="text/xml",
+    nh="text/x-nh",
+    phyloxml="text/x-phyloxml+xml",
+    orthoxml="text/x-orthoxml+xml",
+    gff3="text/x-gff3",
+    fasta="text/x-fasta",
+    bed="text/x-bed",
+    seqxml="text/x-seqxml+xml",
+    text="text/plain",
+    yaml="text/x-yaml",
+    jsonp="text/javascript")
 
 
 match assembly, scheme:
@@ -49,8 +42,10 @@ session.mount(server, adapter)
 
 
 def get(endpoint, params, format):
+    headers = defaultdict(str)
+    headers["Content-Type"] = media_type[format]
     response = session.get(urljoin(server, endpoint),
-                           headers=content_type(format), params=params)
+                           headers=headers, params=params)
     if response.ok:
         if headers["Content-Type"] == "application/json":
             return response.json()
@@ -61,10 +56,13 @@ def get(endpoint, params, format):
 
 
 def post(endpoint, params, json, format):
-    response = session.post(urljoin(
-        server, endpoint), headers=content_type(format), params=params, json=json)
+    headers = defaultdict(str)
+    headers["Content-Type"] = media_type[format]
+    headers['Accept'] = media_type[format]
+    response = session.post(urljoin(server, endpoint),
+                            headers=headers, params=params, json=json)
     if response.ok:
-        if headers["Content-Type"] == "application/json":
+        if headers["Accept"] == "application/json":
             return response.json()
         else:
             return response.text
@@ -73,7 +71,19 @@ def post(endpoint, params, json, format):
 
 
 class Ensembl:
-    headers = defaultdict(str)
+    media_type = dict(
+        json="application/json",
+        xml="text/xml",
+        nh="text/x-nh",
+        phyloxml="text/x-phyloxml+xml",
+        orthoxml="text/x-orthoxml+xml",
+        gff3="text/x-gff3",
+        fasta="text/x-fasta",
+        bed="text/x-bed",
+        seqxml="text/x-seqxml+xml",
+        text="text/plain",
+        yaml="text/x-yaml",
+        jsonp="text/javascript")
 
     def __init__(self, assembly="GRCh38", scheme="https"):
         self.session = requests.Session()
@@ -90,15 +100,13 @@ class Ensembl:
                 self.server = "https://grch37.rest.ensembl.org"
         self.session.mount(self.server, adapter)
 
-    def content_type(self, format):
-        self.headers["Content-Type"] = ContentType[format].value
-        return self.headers
-
     def get(self, endpoint, params, format):
-        response = self.session.get(urljoin(
-            self.server, endpoint), headers=self.content_type(format), params=params)
+        headers = defaultdict(str)
+        headers["Content-Type"] = self.media_type[format]
+        response = self.session.get(
+            urljoin(self.server, endpoint), headers=headers, params=params)
         if response.ok:
-            if self.headers["Content-Type"] == "application/json":
+            if headers["Content-Type"] == "application/json":
                 return response.json()
             else:
                 return response.text
@@ -106,10 +114,13 @@ class Ensembl:
             response.raise_for_status()
 
     def post(self, endpoint, params, json, format):
-        response = self.session.post(urljoin(
-            self.server, endpoint), headers=self.content_type(format), params=params, json=json)
+        headers = defaultdict(str)
+        headers["Content-Type"] = self.media_type[format]
+        headers['Accept'] = self.media_type[format]
+        response = self.session.post(
+            urljoin(self.server, endpoint), headers=headers, params=params, json=json)
         if response.ok:
-            if self.headers["Content-Type"] == "application/json":
+            if headers["Accept"] == "application/json":
                 return response.json()
             else:
                 return response.text
