@@ -5,7 +5,6 @@ from urllib.parse import urljoin
 import requests
 from requests.adapters import HTTPAdapter, Retry
 
-
 assembly = "GRCh38"
 scheme = "https"
 
@@ -44,8 +43,7 @@ session.mount(server, adapter)
 def get(endpoint, params, format):
     headers = defaultdict(str)
     headers["Content-Type"] = media_type[format]
-    response = session.get(urljoin(server, endpoint),
-                           headers=headers, params=params)
+    response = session.get(urljoin(server, endpoint), headers=headers, params=params)
     if response.ok:
         if headers["Content-Type"] == "application/json":
             return response.json()
@@ -59,8 +57,7 @@ def post(endpoint, params, json, format):
     headers = defaultdict(str)
     headers["Content-Type"] = media_type[format]
     headers['Accept'] = media_type[format]
-    response = session.post(urljoin(server, endpoint),
-                            headers=headers, params=params, json=json)
+    response = session.post(urljoin(server, endpoint), headers=headers, params=params, json=json)
     if response.ok:
         if headers["Accept"] == "application/json":
             return response.json()
@@ -103,8 +100,7 @@ class Ensembl:
     def get(self, endpoint, params, format):
         headers = defaultdict(str)
         headers["Content-Type"] = self.media_type[format]
-        response = self.session.get(
-            urljoin(self.server, endpoint), headers=headers, params=params)
+        response = self.session.get(urljoin(self.server, endpoint), headers=headers, params=params)
         if response.ok:
             if headers["Content-Type"] == "application/json":
                 return response.json()
@@ -117,8 +113,7 @@ class Ensembl:
         headers = defaultdict(str)
         headers["Content-Type"] = self.media_type[format]
         headers['Accept'] = self.media_type[format]
-        response = self.session.post(
-            urljoin(self.server, endpoint), headers=headers, params=params, json=json)
+        response = self.session.post(urljoin(self.server, endpoint), headers=headers, params=params, json=json)
         if response.ok:
             if headers["Accept"] == "application/json":
                 return response.json()
@@ -224,9 +219,24 @@ def _(id: list, species='human', format="json", **kwargs):
     return post(endpoint=f"vep/{species}/id", params=kwargs, json={"ids": id}, format=format)
 
 
+@singledispatch
+def vep_region(region: str, species='human', format="json", **kwargs):
+    """Fetch variant consequences based on a genomic region"""
+    return get(endpoint=f"vep/{species}/region/{region}", params=kwargs, format=format)
+
+
+@vep_region.register
+def _(region: list, species='human', format="json", **kwargs):
+    """Fetch variant consequences for multiple genomic regions"""
+    return post(endpoint=f"vep/{species}/region", params=kwargs, json={"variants": region}, format=format)
+
+
 if __name__ == "__main__":
     import pprint
 
     ensembl = Ensembl()
-    pprint.pprint(ensembl.vep_id(["rs137853119", "rs137853120"]))
+    pprint.pprint(ensembl.variant_recoder(["rs137853119", "rs137853120"], fields="id", vcf_string=True))
     pprint.pprint(vep_hgvs(["NP_001361433.1:p.Asp512Asn", "NP_001361433.1:p.Gly433Arg"]))
+    pprint.pprint(vep_region("22:37075180-37075180:1/T"))
+    pprint.pprint(vep_region("22:37073553-37073553:1/T"))
+    pprint.pprint(vep_region(["22 37075180 rs137853119 C T . . .", "22 37073553 rs137853120 C T . . ."]))
