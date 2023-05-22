@@ -82,13 +82,13 @@ def _(id: list, species='human', format="json", fields=None, var_synonyms=None, 
 
 
 @singledispatch
-def variation(id: str, species='human', format="json", pops=False, genotypes=False, genotyping_chips=False, phenotypes=False, population_genotypes=False):
+def variation(id: str, species='human', format="json", pops=None, genotypes=None, genotyping_chips=None, phenotypes=None, population_genotypes=None):
     """Uses a variant identifier (e.g. rsID) to return the variation features including optional genotype, phenotype and population data"""
     return get(endpoint=f"variation/{species}/{id}", params=dict(pops=pops, genotypes=genotypes, genotyping_chips=genotyping_chips, phenotypes=phenotypes, population_genotypes=population_genotypes), format=format)
 
 
 @variation.register
-def _(id: list, species='human', format="json", pops=False, genotypes=False, phenotypes=False, population_genotypes=False):
+def _(id: list, species='human', format="json", pops=None, genotypes=None, phenotypes=None, population_genotypes=None):
     """Uses a list of variant identifiers (e.g. rsID) to return the variation features including optional genotype, phenotype and population data"""
     return post(endpoint=f"variation/{species}", params=dict(pops=pops, genotypes=genotypes, phenotypes=phenotypes, population_genotypes=population_genotypes), json={"ids": id}, format=format)
 
@@ -187,9 +187,6 @@ parser_variant_recoder_get.add_argument(
     '--var_synonyms', help='Known variation synonyms and their sources', action="store_const", const=1)
 parser_variant_recoder_get.add_argument(
     '--format', default="json", help='Response formats', choices=["json", "xml", "jsonp"])
-# ------------------------------------------------------------------------------------------------------------------------
-# variant_recoder_post
-# -------------------------------------------------------------------------------------------------
 parser_variant_recoder_post = subparsers.add_parser(
     'variant_recoder_post', help='Translate a list of variant identifiers, HGVS notations or genomic SPDI notations to all possible variant IDs, HGVS and genomic SPDI')
 parser_variant_recoder_post.add_argument(
@@ -204,9 +201,6 @@ parser_variant_recoder_post.add_argument(
     '--var_synonyms', help='Known variation synonyms and their sources', action="store_const", const=1)
 parser_variant_recoder_post.add_argument(
     '--format', default="json", help='Response formats', choices=["json", "xml", "jsonp"])
-# -------------------------------------------------------------------------------------------------
-# variation_get
-# -------------------------------------------------------------------
 parser_variation_get = subparsers.add_parser(
     'variation_get', help='Uses a variant identifier (e.g. rsID) to return the variation features including optional genotype, phenotype and population data')
 parser_variation_get.add_argument(
@@ -225,9 +219,6 @@ parser_variation_get.add_argument(
     '--genotyping_chips', help='Include genotyping chips information', action="store_const", const=1)
 parser_variation_get.add_argument(
     '--population_genotypes', help='Include population genotype frequencies', action="store_const", const=1)
-# -------------------------------------------------------------------
-# variation_post
-# -------------------------------------------------------------------
 parser_variation_post = subparsers.add_parser(
     'variation_post', help='Uses a list of variant identifiers (e.g. rsID) to return the variation features including optional genotype, phenotype and population data')
 parser_variation_post.add_argument(
@@ -244,9 +235,6 @@ parser_variation_post.add_argument(
     '--genotypes', help='Include individual genotypes', action="store_const", const=1)
 parser_variation_post.add_argument(
     '--population_genotypes', help='Include population genotype frequencies', action="store_const", const=1)
-# -------------------------------------------------------------------
-# variation_pmcid
-# -------------------------------------------------------------------
 parser_variation_pmcid = subparsers.add_parser(
     "variation_pmcid", help="Fetch variants by publication using PubMed Central reference number (PMCID)")
 parser_variation_pmcid.add_argument(
@@ -255,9 +243,6 @@ parser_variation_pmcid.add_argument(
     '--species', default="human", help='Species name/alias')
 parser_variation_pmcid.add_argument(
     '--format', default="json", help='Response formats')
-# -------------------------------------------------------------------
-# variation_pmid
-# -------------------------------------------------------------------
 parser_variation_pmid = subparsers.add_parser(
     "variation_pmid", help="Fetch variants by publication using PubMed reference number (PMID)")
 parser_variation_pmid.add_argument(
@@ -266,9 +251,6 @@ parser_variation_pmid.add_argument(
     '--species', default="human", help='Species name/alias')
 parser_variation_pmid.add_argument(
     '--format', default="json", help='Response formats')
-# -------------------------------------------------------------------
-# vep_hgvs_get
-# -------------------------------------------------------------------
 parser_vep_hgvs_get = subparsers.add_parser(
     "vep_hgvs_get", help="Fetch variant consequences based on a HGVS notation")
 parser_vep_hgvs_get.add_argument(
@@ -365,9 +347,6 @@ parser_vep_hgvs_get.add_argument(
     '--vcf_string', action="store_const", const=1, help="Include alleles in VCF format")
 parser_vep_hgvs_get.add_argument(
     '--xref_refseq', action="store_const", const=1, help="Include aligned RefSeq mRNA identifiers for transcript. NB: theRefSeq and Ensembl transcripts aligned in this way MAY NOT, AND FREQUENTLY WILL NOT, match exactly in sequence, exon structure and protein product")
-# -----------------------------------------------------------------------------------------------------------------------
-# vep_hgvs_post
-# -----------------------------------------------------------------------------------------------------------------------
 parser_vep_hgvs_post = subparsers.add_parser("vep_hgvs_post", help="Fetch variant consequences for multiple HGVS notations")
 parser_vep_hgvs_post.add_argument(
     'hgvs_notation', help='HGVS notation. May be genomic (g), coding (c) or protein (p), with reference to chromosome name, gene name, transcript ID or protein ID.', action="extend", nargs="+")
@@ -461,9 +440,6 @@ parser_vep_hgvs_post.add_argument(
     '--vcf_string', action="store_const", const=1, help="Include alleles in VCF format")
 parser_vep_hgvs_post.add_argument(
     '--xref_refseq', action="store_const", const=1, help="Include aligned RefSeq mRNA identifiers for transcript. NB: theRefSeq and Ensembl transcripts aligned in this way MAY NOT, AND FREQUENTLY WILL NOT, match exactly in sequence, exon structure and protein product")
-# ---------------------------------------------------------------------------------------------
-# vep_id_get
-# ---------------------------------------------------------------------------------------------
 parser_vep_id_get = subparsers.add_parser("vep_id_get", help="Fetch variant consequences based on a variant identifier")
 parser_vep_id_get.add_argument(
     'id', help='Query ID. Supports dbSNP, COSMIC and HGMD identifiers')
@@ -557,9 +533,6 @@ parser_vep_id_get.add_argument(
     '--vcf_string', action="store_const", const=1, help="Include alleles in VCF format")
 parser_vep_id_get.add_argument(
     '--xref_refseq', action="store_const", const=1, help="Include aligned RefSeq mRNA identifiers for transcript. NB: theRefSeq and Ensembl transcripts aligned in this way MAY NOT, AND FREQUENTLY WILL NOT, match exactly in sequence, exon structure and protein product")
-# ----------------------------------------------------------------------------------------------
-# vep_id_post
-# ---------------------------------------------------------------------------------------------
 parser_vep_id_post = subparsers.add_parser("vep_id_post", help="Fetch variant consequences for multiple ids")
 parser_vep_id_post.add_argument(
     'id', help='Query ID. Supports dbSNP, COSMIC and HGMD identifiers', action="extend", nargs="+")
@@ -651,9 +624,6 @@ parser_vep_id_post.add_argument(
     '--vcf_string', action="store_const", const=1, help="Include alleles in VCF format")
 parser_vep_id_post.add_argument(
     '--xref_refseq', action="store_const", const=1, help="Include aligned RefSeq mRNA identifiers for transcript. NB: theRefSeq and Ensembl transcripts aligned in this way MAY NOT, AND FREQUENTLY WILL NOT, match exactly in sequence, exon structure and protein product")
-# ---------------------------------------------------------------------------------------------
-# vep_region_get
-# ---------------------------------------------------------------------------------------------
 parser_vep_region_get = subparsers.add_parser("vep_region_get", help="Fetch variant consequences")
 parser_vep_region_get.add_argument('region', help='Query region. We only support the current assembly')
 parser_vep_region_get.add_argument('allele', help='Variation allele')
@@ -747,9 +717,6 @@ parser_vep_region_get.add_argument(
     '--vcf_string', action="store_const", const=1, help="Include alleles in VCF format")
 parser_vep_region_get.add_argument(
     '--xref_refseq', action="store_const", const=1, help="Include aligned RefSeq mRNA identifiers for transcript. NB: theRefSeq and Ensembl transcripts aligned in this way MAY NOT, AND FREQUENTLY WILL NOT, match exactly in sequence, exon structure and protein product")
-# ---------------------------------------------------------------------------------------------
-# vep_region_post
-# ---------------------------------------------------------------------------------------------
 parser_vep_region_post = subparsers.add_parser("vep_region_post", help="Fetch variant consequences for multiple regions")
 parser_vep_region_post.add_argument('region', nargs='+', action='extend')
 parser_vep_region_post.add_argument(
@@ -840,7 +807,6 @@ parser_vep_region_post.add_argument(
     '--vcf_string', action="store_const", const=1, help="Include alleles in VCF format")
 parser_vep_region_post.add_argument(
     '--xref_refseq', action="store_const", const=1, help="Include aligned RefSeq mRNA identifiers for transcript. NB: theRefSeq and Ensembl transcripts aligned in this way MAY NOT, AND FREQUENTLY WILL NOT, match exactly in sequence, exon structure and protein product")
-# ---------------------------------------------------------------------------------------------
 parser_variation_get.set_defaults(func=variation)
 parser_variation_post.set_defaults(func=variation)
 parser_variation_pmcid.set_defaults(func=variation_pmcid)
