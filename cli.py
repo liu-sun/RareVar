@@ -163,10 +163,10 @@ def _(region: list, species='human', AncestralAllele=None, Blosum62=None, CADD=N
                                                               mirna=mirna, mutfunc=mutfunc, numbers=numbers, protein=protein, refseq=refseq, shift_3prime=shift_3prime, shift_genomic=shift_genomic, transcript_id=transcript_id, transcript_version=transcript_version, tsl=tsl, uniprot=uniprot, variant_class=variant_class, vcf_string=vcf_string, xref_refseq=xref_refseq), json={"variants": region}, format=format)
 
 
-parser = argparse.ArgumentParser(description='Ensembl REST API client', fromfile_prefix_chars='@',
-                                 prog="ensembl_rest", epilog="For further help on a command, type ensembl_rest <command> -h")
+parser = argparse.ArgumentParser(description='Ensembl REST API', fromfile_prefix_chars='@',
+                                 prog="Python client of Ensembl REST API")
 parser.add_argument('--assembly', default="GRCh38",
-                    help='Genome assembly', choices=["GRCh38", "GRCh37"])
+                    help='Assembly', choices=["GRCh38", "GRCh37"])
 parser.add_argument('--scheme', default="https",
                     help='Scheme', choices=["http", "https"])
 subparsers = parser.add_subparsers(dest="command")
@@ -174,456 +174,672 @@ subparsers = parser.add_subparsers(dest="command")
 # variant_recoder_get
 # ------------------------------------------------------------------------------------------------------------------------
 parser_variant_recoder_get = subparsers.add_parser(
-    'variant_recoder_get', help='variant_recoder help')
+    'variant_recoder_get', help='Translate a variant identifier, HGVS notation or genomic SPDI notation to all possible variant IDs, HGVS and genomic SPDI')
 parser_variant_recoder_get.add_argument(
-    'id', help='Variant identifier, HGVS notation or genomic SPDI notation')
+    'id', help='Variant ID, HGVS notation or genomic SPDI notation')
 parser_variant_recoder_get.add_argument(
-    '--species', default="human", help='Species')
+    '--species', default="human", help='Species name/alias')
 parser_variant_recoder_get.add_argument(
-    "--vcf_string", help="VCF string", action="store_const", const=1)
-parser_variant_recoder_get.add_argument('--fields', help='Fields')
+    "--vcf_string", help="VCF represented in a string", action="store_const", const=1)
 parser_variant_recoder_get.add_argument(
-    '--var_synonyms', help='Var synonyms', action="store_const", const=1)
+    '--fields', help='Comma-separated list of identifiers/notations to include from the following types: id (variant ID), hgvsg (HGVS genomic), hgvsc (HGVS coding), hgvsp (HGVS protein), spdi (SPDI genomic)')
 parser_variant_recoder_get.add_argument(
-    '--format', default="json", help='Format', choices=["json", "xml", "jsonp"])
+    '--var_synonyms', help='Known variation synonyms and their sources', action="store_const", const=1)
+parser_variant_recoder_get.add_argument(
+    '--format', default="json", help='Response formats', choices=["json", "xml", "jsonp"])
 # ------------------------------------------------------------------------------------------------------------------------
 # variant_recoder_post
 # -------------------------------------------------------------------------------------------------
 parser_variant_recoder_post = subparsers.add_parser(
-    'variant_recoder_post', help='variant_recoder help')
+    'variant_recoder_post', help='Translate a list of variant identifiers, HGVS notations or genomic SPDI notations to all possible variant IDs, HGVS and genomic SPDI')
 parser_variant_recoder_post.add_argument(
-    'id', help='Variant identifier, HGVS notation or genomic SPDI notation', action="extend", nargs="+")
+    'id', help='Variant ID, HGVS notation or genomic SPDI notation', action="extend", nargs="+")
 parser_variant_recoder_post.add_argument(
-    '--species', default="human", help='Species')
+    '--species', default="human", help='Species name/alias')
 parser_variant_recoder_post.add_argument(
-    "--vcf_string", help="VCF string", action="store_const", const=1)
-parser_variant_recoder_post.add_argument('--fields', help='Fields')
+    "--vcf_string", help="VCF represented in a string", action="store_const", const=1)
 parser_variant_recoder_post.add_argument(
-    '--var_synonyms', help='Var synonyms', action="store_const", const=1)
+    '--fields', help='Comma-separated list of identifiers/notations to include from the following types: id (variant ID), hgvsg (HGVS genomic), hgvsc (HGVS coding), hgvsp (HGVS protein), spdi (SPDI genomic)')
 parser_variant_recoder_post.add_argument(
-    '--format', default="json", help='Format', choices=["json", "xml", "jsonp"])
+    '--var_synonyms', help='Known variation synonyms and their sources', action="store_const", const=1)
+parser_variant_recoder_post.add_argument(
+    '--format', default="json", help='Response formats', choices=["json", "xml", "jsonp"])
 # -------------------------------------------------------------------------------------------------
 # variation_get
 # -------------------------------------------------------------------
 parser_variation_get = subparsers.add_parser(
-    'variation_get', help='variation help')
+    'variation_get', help='Uses a variant identifier (e.g. rsID) to return the variation features including optional genotype, phenotype and population data')
 parser_variation_get.add_argument(
-    'id', help='Variant identifier')
+    'id', help='Variant id')
 parser_variation_get.add_argument(
-    '--species', default="human", help='Species')
-parser_variation_get.add_argument('--format', default="json", help='Format')
+    '--species', default="human", help='Species name/alias')
 parser_variation_get.add_argument(
-    '--phenotypes', action="store_const", const=1, help='Phenotypes')
+    '--format', default="json", help='Response formats')
 parser_variation_get.add_argument(
-    '--pops', help='Pops', action="store_const", const=1)
+    '--phenotypes', action="store_const", const=1, help='Include phenotypes')
 parser_variation_get.add_argument(
-    '--genotypes', help='Genotypes', action="store_const", const=1)
+    '--pops', help='Include population allele frequencies', action="store_const", const=1)
 parser_variation_get.add_argument(
-    '--genotyping_chips', help='Genotyping chips', action="store_const", const=1)
+    '--genotypes', help='Include individual genotypes', action="store_const", const=1)
 parser_variation_get.add_argument(
-    '--population_genotypes', help='Population genotypes', action="store_const", const=1)
+    '--genotyping_chips', help='Include genotyping chips information', action="store_const", const=1)
+parser_variation_get.add_argument(
+    '--population_genotypes', help='Include population genotype frequencies', action="store_const", const=1)
 # -------------------------------------------------------------------
 # variation_post
 # -------------------------------------------------------------------
 parser_variation_post = subparsers.add_parser(
-    'variation_post', help='variation help')
+    'variation_post', help='Uses a list of variant identifiers (e.g. rsID) to return the variation features including optional genotype, phenotype and population data')
 parser_variation_post.add_argument(
-    'id', help='Variant identifier', action="extend", nargs="+")
+    'id', help='Variant id', action="extend", nargs="+")
 parser_variation_post.add_argument(
-    '--species', default="human", help='Species')
-parser_variation_post.add_argument('--format', default="json", help='Format')
+    '--species', default="human", help='Species name/alias')
 parser_variation_post.add_argument(
-    '--phenotypes', action="store_const", const=1, help='Phenotypes')
+    '--format', default="json", help='Response formats')
 parser_variation_post.add_argument(
-    '--pops', help='Pops', action="store_const", const=1)
+    '--phenotypes', action="store_const", const=1, help='Include phenotypes')
 parser_variation_post.add_argument(
-    '--genotypes', help='Genotypes', action="store_const", const=1)
+    '--pops', help='Include population allele frequencies', action="store_const", const=1)
 parser_variation_post.add_argument(
-    '--population_genotypes', help='Population genotypes', action="store_const", const=1)
+    '--genotypes', help='Include individual genotypes', action="store_const", const=1)
+parser_variation_post.add_argument(
+    '--population_genotypes', help='Include population genotype frequencies', action="store_const", const=1)
 # -------------------------------------------------------------------
 # variation_pmcid
 # -------------------------------------------------------------------
-parser_variation_pmcid = subparsers.add_parser("variation_pmcid")
-parser_variation_pmcid.add_argument('pmcid', help='PMCID')
+parser_variation_pmcid = subparsers.add_parser(
+    "variation_pmcid", help="Fetch variants by publication using PubMed Central reference number (PMCID)")
 parser_variation_pmcid.add_argument(
-    '--species', default="human", help='Species')
-parser_variation_pmcid.add_argument('--format', default="json", help='Format')
+    'pmcid', help='PubMed Central reference number (PMCID)')
+parser_variation_pmcid.add_argument(
+    '--species', default="human", help='Species name/alias')
+parser_variation_pmcid.add_argument(
+    '--format', default="json", help='Response formats')
 # -------------------------------------------------------------------
 # variation_pmid
 # -------------------------------------------------------------------
-parser_variation_pmid = subparsers.add_parser("variation_pmid")
-parser_variation_pmid.add_argument('pmid', help='PMID')
+parser_variation_pmid = subparsers.add_parser(
+    "variation_pmid", help="Fetch variants by publication using PubMed reference number (PMID)")
 parser_variation_pmid.add_argument(
-    '--species', default="human", help='Species')
-parser_variation_pmid.add_argument('--format', default="json", help='Format')
+    'pmid', help='PubMed reference number (PMID)')
+parser_variation_pmid.add_argument(
+    '--species', default="human", help='Species name/alias')
+parser_variation_pmid.add_argument(
+    '--format', default="json", help='Response formats')
 # -------------------------------------------------------------------
 # vep_hgvs_get
 # -------------------------------------------------------------------
-parser_vep_hgvs_get = subparsers.add_parser("vep_hgvs_get")
-parser_vep_hgvs_get.add_argument('hgvs_notation', help='HGVS notation')
-parser_vep_hgvs_get.add_argument('--species', default="human", help='Species')
-parser_vep_hgvs_get.add_argument('--format', default="json", help='Format')
+parser_vep_hgvs_get = subparsers.add_parser(
+    "vep_hgvs_get", help="Fetch variant consequences based on a HGVS notation")
 parser_vep_hgvs_get.add_argument(
-    '--AncestralAllele', action="store_const", const=1)
-parser_vep_hgvs_get.add_argument('--Blosum62', action="store_const", const=1)
-parser_vep_hgvs_get.add_argument('--CADD', action="store_const", const=1)
+    'hgvs_notation', help='HGVS notation. May be genomic (g), coding (c) or protein (p), with reference to chromosome name, gene name, transcript ID or protein ID.')
 parser_vep_hgvs_get.add_argument(
-    '--Conservation', action="store_const", const=1)
-parser_vep_hgvs_get.add_argument('--DisGeNET', action="store_const", const=1)
-parser_vep_hgvs_get.add_argument('--EVE', action="store_const", const=1)
-parser_vep_hgvs_get.add_argument('--GO', action="store_const", const=1)
+    '--species', default="human", help='Species name/alias')
 parser_vep_hgvs_get.add_argument(
-    '--GeneSplicer', action="store_const", const=1)
-parser_vep_hgvs_get.add_argument('--IntAct', action="store_const", const=1)
-parser_vep_hgvs_get.add_argument('--LoF', action="store_const", const=1)
-parser_vep_hgvs_get.add_argument('--Mastermind', action="store_const", const=1)
-parser_vep_hgvs_get.add_argument('--MaxEntScan', action="store_const", const=1)
-parser_vep_hgvs_get.add_argument('--NMD', action="store_const", const=1)
-parser_vep_hgvs_get.add_argument('--Phenotypes', action="store_const", const=1)
-parser_vep_hgvs_get.add_argument('--SpliceAI', default=0, type=int)
+    '--format', default="json", help='Response formats')
 parser_vep_hgvs_get.add_argument(
-    '--UTRAnnotator', action="store_const", const=1)
+    '--AncestralAllele', action="store_const", const=1, help="Retrieves the ancestral allele for variants inferred from the Ensembl Compara Enredo-Pecan-Ortheus (EPO) pipeline")
+parser_vep_hgvs_get.add_argument('--Blosum62', action="store_const",
+                                 const=1, help="Include BLOSUM62 amino acid conservation score")
+parser_vep_hgvs_get.add_argument('--CADD', action="store_const", const=1,
+                                 help="Include CADD (Combined Annotation Dependent Depletion) deleteriousness scores for single nucleotide variants.")
 parser_vep_hgvs_get.add_argument(
-    '--ambiguous_hgvs', action="store_const", const=1)
-parser_vep_hgvs_get.add_argument('--appris', action="store_const", const=1)
-parser_vep_hgvs_get.add_argument('--callback')
-parser_vep_hgvs_get.add_argument('--canonical', action="store_const", const=1)
-parser_vep_hgvs_get.add_argument('--ccds', action="store_const", const=1)
-parser_vep_hgvs_get.add_argument('--dbNSFP')
-parser_vep_hgvs_get.add_argument('--dbscSNV', action="store_const", const=1)
-parser_vep_hgvs_get.add_argument('--distance', type=int)
-parser_vep_hgvs_get.add_argument('--domains', action="store_const", const=1)
-parser_vep_hgvs_get.add_argument('--failed', action="store_const", const=1)
-parser_vep_hgvs_get.add_argument('--hgvs', action="store_const", const=1)
-parser_vep_hgvs_get.add_argument('--mane', action="store_const", const=1)
-parser_vep_hgvs_get.add_argument('--merged', action="store_const", const=1)
-parser_vep_hgvs_get.add_argument('--minimal', action="store_const", const=1)
-parser_vep_hgvs_get.add_argument('--mirna', action="store_const", const=1)
-parser_vep_hgvs_get.add_argument('--mutfunc', action="store_const", const=1)
-parser_vep_hgvs_get.add_argument('--numbers', action="store_const", const=1)
-parser_vep_hgvs_get.add_argument('--protein', action="store_const", const=1)
-parser_vep_hgvs_get.add_argument('--refseq', action="store_const", const=1)
+    '--Conservation', action="store_const", const=1, help="Retrieves a conservation score from the Ensembl Compara databases for variant positions")
+parser_vep_hgvs_get.add_argument('--DisGeNET', action="store_const", const=1,
+                                 help="Retrieves Variant-Disease-PMID associations from the DisGeNET database")
+parser_vep_hgvs_get.add_argument('--EVE', action="store_const", const=1,
+                                 help="EVE (evolutionary model of variant effect) is a computational method for the classification of human genetic variants trained solely on evolutionary sequences.")
+parser_vep_hgvs_get.add_argument('--GO', action="store_const", const=1,
+                                 help="Retrieves Gene Ontology terms associated with transcripts/translations")
 parser_vep_hgvs_get.add_argument(
-    '--shift_3prime', action="store_const", const=1)
+    '--GeneSplicer', action="store_const", const=1, help="Detects splice sites in genomic DNA")
+parser_vep_hgvs_get.add_argument('--IntAct', action="store_const", const=1,
+                                 help="Provides molecular interaction data for variants as reported by IntAct database.")
+parser_vep_hgvs_get.add_argument('--LoF', action="store_const", const=1,
+                                 help="LOFTEE identifies LoF (loss-of-function) variation.")
+parser_vep_hgvs_get.add_argument('--Mastermind', action="store_const", const=1,
+                                 help="Variants that have clinical evidence cited in the medical literature reported by Mastermind Genomic Search Engine")
+parser_vep_hgvs_get.add_argument('--MaxEntScan', action="store_const", const=1,
+                                 help="Sequence motif and maximum entropy based splice site consensus predictions")
+parser_vep_hgvs_get.add_argument('--NMD', action="store_const", const=1,
+                                 help="Predicts if a variant allows the transcript escape nonsense-mediated mRNA decay.")
+parser_vep_hgvs_get.add_argument('--Phenotypes', action="store_const",
+                                 const=1, help="Retrieves overlapping phenotype information")
+parser_vep_hgvs_get.add_argument('--SpliceAI', type=int, help="""Retrieves pre-calculated annotations from SpliceAI a deep neural network, developed by Illumina, Inc that predicts splice junctions from an arbitrary pre-mRNA transcript sequence. Used for non-commercial purposes. (plugin details)
+The pre-calculated annotations for all possible single nucleotide substitutions can be retrieved from: value 1) Ensembl/GENCODE v24 canonical transcripts (masked scores); value 2) Ensembl/GENCODE v37 MANE transcripts (raw scores).
+Note: The pre-calculated annotations for 1 base insertions, and 1-4 base deletions are only available for Ensembl/GENCODE v24 canonical transcripts.""")
 parser_vep_hgvs_get.add_argument(
-    '--shift_genomic', action="store_const", const=1)
-parser_vep_hgvs_get.add_argument('--transcript_id')
+    '--UTRAnnotator', action="store_const", const=1, help="Annotates high-impact five prime UTR variants either creating new upstream ORFs or disrupting existing upstream ORFs")
 parser_vep_hgvs_get.add_argument(
-    '--transcript_version', action="store_const", const=1)
-parser_vep_hgvs_get.add_argument('--tsl', action="store_const", const=1)
-parser_vep_hgvs_get.add_argument('--uniprot', action="store_const", const=1)
+    '--ambiguous_hgvs', action="store_const", const=1, help="Allow input HGVSp to resolve to all genomic locations. Otherwise, most likely transcript will be selected.")
 parser_vep_hgvs_get.add_argument(
-    '--variant_class', action="store_const", const=1)
-parser_vep_hgvs_get.add_argument('--vcf_string', action="store_const", const=1)
+    '--appris', action="store_const", const=1, help="Include APPRIS isoform annotation")
 parser_vep_hgvs_get.add_argument(
-    '--xref_refseq', action="store_const", const=1)
+    '--callback', help="Name of the callback subroutine to be returned by the requested JSONP response. Required ONLY when using JSONP as the serialisation method.")
+parser_vep_hgvs_get.add_argument('--canonical', action="store_const", const=1,
+                                 help="Include a flag indicating the canonical transcript for a gene")
+parser_vep_hgvs_get.add_argument(
+    '--ccds', action="store_const", const=1, help="Include CCDS transcript identifiers")
+parser_vep_hgvs_get.add_argument(
+    '--dbNSFP', help="Include fields from dbNSFP, a database of pathogenicity predictions for missense variants. Multiple fields should be separated by commas.")
+parser_vep_hgvs_get.add_argument('--dbscSNV', action="store_const",
+                                 const=1, help="Predictions for splicing variants from dbscSNV.")
+parser_vep_hgvs_get.add_argument(
+    '--distance', type=int, help="Change the distance to transcript for which VEP assigns upstream and downstream consequences")
+parser_vep_hgvs_get.add_argument('--domains', action="store_const",
+                                 const=1, help="Include names of overlapping protein domains")
+parser_vep_hgvs_get.add_argument('--failed', action="store_const", const=1,
+                                 help="When checking for co-located variants, by default variants flagged as failed by Ensembl's QC pipeline will be excluded. Set this flag to 1 to include such variants")
+parser_vep_hgvs_get.add_argument('--hgvs', action="store_const", const=1,
+                                 help="Include HGVS nomenclature based on Ensembl stable identifiers")
+parser_vep_hgvs_get.add_argument('--mane', action="store_const",
+                                 const=1, help="Include MANE Select annotations (GRCh38 only)")
+parser_vep_hgvs_get.add_argument('--merged', action="store_const", const=1,
+                                 help="Use merged Ensembl and RefSeq transcript set to report consequences (human only)")
+parser_vep_hgvs_get.add_argument('--minimal', action="store_const", const=1, help="Convert alleles to their most minimal representation before consequence calculation i.e. sequence that is identical between each pair of reference and alternate alleles is trimmed off from both ends, with coordinates adjusted accordingly. Note this may lead to discrepancies between input coordinates and coordinates reported by VEP relative to transcript sequences")
+parser_vep_hgvs_get.add_argument('--mirna', action="store_const", const=1,
+                                 help="Determines where in the secondary structure of a miRNA a variant falls")
+parser_vep_hgvs_get.add_argument('--mutfunc', action="store_const", const=1,
+                                 help="Predicts destabilization effect of protein structure, interaction, regulatory region etc. caused by a variant as reported by mutfunc database.")
+parser_vep_hgvs_get.add_argument('--numbers', action="store_const", const=1,
+                                 help="Include affected exon and intron positions within the transcript")
+parser_vep_hgvs_get.add_argument(
+    '--protein', action="store_const", const=1, help="Include Ensembl protein identifiers")
+parser_vep_hgvs_get.add_argument('--refseq', action="store_const", const=1,
+                                 help="Use RefSeq transcript set to report consequences (human only)")
+parser_vep_hgvs_get.add_argument(
+    '--shift_3prime', action="store_const", const=1, help="Shift transcript-overlapping variants as far as possible in the 3' direction before providing consequences")
+parser_vep_hgvs_get.add_argument(
+    '--shift_genomic', action="store_const", const=1, help="Shift all variants as far as possible in the 3' direction before providing consequences")
+parser_vep_hgvs_get.add_argument(
+    '--transcript_id', help="Filter results by Transcript ID")
+parser_vep_hgvs_get.add_argument(
+    '--transcript_version', action="store_const", const=1, help="Add version numbers to Ensembl transcript identifiers")
+parser_vep_hgvs_get.add_argument('--tsl', action="store_const",
+                                 const=1, help="Include transcript support level (TSL) annotation")
+parser_vep_hgvs_get.add_argument('--uniprot', action="store_const", const=1,
+                                 help="Include best match accessions for translated protein products from three UniProt-related databases (SWISSPROT, TREMBL and UniParc)")
+parser_vep_hgvs_get.add_argument(
+    '--variant_class', action="store_const", const=1, help="Output the Sequence Ontology variant class for the input variant")
+parser_vep_hgvs_get.add_argument(
+    '--vcf_string', action="store_const", const=1, help="Include alleles in VCF format")
+parser_vep_hgvs_get.add_argument(
+    '--xref_refseq', action="store_const", const=1, help="Include aligned RefSeq mRNA identifiers for transcript. NB: theRefSeq and Ensembl transcripts aligned in this way MAY NOT, AND FREQUENTLY WILL NOT, match exactly in sequence, exon structure and protein product")
 # -----------------------------------------------------------------------------------------------------------------------
 # vep_hgvs_post
 # -----------------------------------------------------------------------------------------------------------------------
-parser_vep_hgvs_post = subparsers.add_parser("vep_hgvs_post")
+parser_vep_hgvs_post = subparsers.add_parser("vep_hgvs_post", help="Fetch variant consequences for multiple HGVS notations")
 parser_vep_hgvs_post.add_argument(
-    'hgvs_notation', help='HGVS notation', action="extend", nargs="+")
-parser_vep_hgvs_post.add_argument('--species', default="human", help='Species')
-parser_vep_hgvs_post.add_argument('--format', default="json", help='Format')
+    'hgvs_notation', help='HGVS notation. May be genomic (g), coding (c) or protein (p), with reference to chromosome name, gene name, transcript ID or protein ID.', action="extend", nargs="+")
 parser_vep_hgvs_post.add_argument(
-    '--AncestralAllele', action="store_const", const=1)
-parser_vep_hgvs_post.add_argument('--Blosum62', action="store_const", const=1)
-parser_vep_hgvs_post.add_argument('--CADD', action="store_const", const=1)
-parser_vep_hgvs_post.add_argument('--DisGeNET', action="store_const", const=1)
-parser_vep_hgvs_post.add_argument('--EVE', action="store_const", const=1)
-parser_vep_hgvs_post.add_argument('--GO', action="store_const", const=1)
+    '--species', default="human", help='Species name/alias')
 parser_vep_hgvs_post.add_argument(
-    '--GeneSplicer', action="store_const", const=1)
-parser_vep_hgvs_post.add_argument('--IntAct', action="store_const", const=1)
-parser_vep_hgvs_post.add_argument('--LoF', action="store_const", const=1)
+    '--format', default="json", help='Response formats')
 parser_vep_hgvs_post.add_argument(
-    '--Mastermind', action="store_const", const=1)
+    '--AncestralAllele', action="store_const", const=1, help="Retrieves the ancestral allele for variants inferred from the Ensembl Compara Enredo-Pecan-Ortheus (EPO) pipeline")
+parser_vep_hgvs_post.add_argument('--Blosum62', action="store_const",
+                                 const=1, help="Include BLOSUM62 amino acid conservation score")
+parser_vep_hgvs_post.add_argument('--CADD', action="store_const", const=1,
+                                 help="Include CADD (Combined Annotation Dependent Depletion) deleteriousness scores for single nucleotide variants.")
+parser_vep_hgvs_post.add_argument('--DisGeNET', action="store_const", const=1,
+                                 help="Retrieves Variant-Disease-PMID associations from the DisGeNET database")
+parser_vep_hgvs_post.add_argument('--EVE', action="store_const", const=1,
+                                 help="EVE (evolutionary model of variant effect) is a computational method for the classification of human genetic variants trained solely on evolutionary sequences.")
+parser_vep_hgvs_post.add_argument('--GO', action="store_const", const=1,
+                                 help="Retrieves Gene Ontology terms associated with transcripts/translations")
 parser_vep_hgvs_post.add_argument(
-    '--MaxEntScan', action="store_const", const=1)
-parser_vep_hgvs_post.add_argument('--NMD', action="store_const", const=1)
+    '--GeneSplicer', action="store_const", const=1, help="Detects splice sites in genomic DNA")
+parser_vep_hgvs_post.add_argument('--IntAct', action="store_const", const=1,
+                                 help="Provides molecular interaction data for variants as reported by IntAct database.")
+parser_vep_hgvs_post.add_argument('--LoF', action="store_const", const=1,
+                                 help="LOFTEE identifies LoF (loss-of-function) variation.")
+parser_vep_hgvs_post.add_argument('--Mastermind', action="store_const", const=1,
+                                 help="Variants that have clinical evidence cited in the medical literature reported by Mastermind Genomic Search Engine")
+parser_vep_hgvs_post.add_argument('--MaxEntScan', action="store_const", const=1,
+                                 help="Sequence motif and maximum entropy based splice site consensus predictions")
+parser_vep_hgvs_post.add_argument('--NMD', action="store_const", const=1,
+                                 help="Predicts if a variant allows the transcript escape nonsense-mediated mRNA decay.")
+parser_vep_hgvs_post.add_argument('--Phenotypes', action="store_const",
+                                 const=1, help="Retrieves overlapping phenotype information")
+parser_vep_hgvs_post.add_argument('--SpliceAI', type=int, help="""Retrieves pre-calculated annotations from SpliceAI a deep neural network, developed by Illumina, Inc that predicts splice junctions from an arbitrary pre-mRNA transcript sequence. Used for non-commercial purposes. (plugin details)
+The pre-calculated annotations for all possible single nucleotide substitutions can be retrieved from: value 1) Ensembl/GENCODE v24 canonical transcripts (masked scores); value 2) Ensembl/GENCODE v37 MANE transcripts (raw scores).
+Note: The pre-calculated annotations for 1 base insertions, and 1-4 base deletions are only available for Ensembl/GENCODE v24 canonical transcripts.""")
 parser_vep_hgvs_post.add_argument(
-    '--Phenotypes', action="store_const", const=1)
-parser_vep_hgvs_post.add_argument('--SpliceAI', default=0, type=int)
+    '--UTRAnnotator', action="store_const", const=1, help="Annotates high-impact five prime UTR variants either creating new upstream ORFs or disrupting existing upstream ORFs")
 parser_vep_hgvs_post.add_argument(
-    '--UTRAnnotator', action="store_const", const=1)
+    '--ambiguous_hgvs', action="store_const", const=1, help="Allow input HGVSp to resolve to all genomic locations. Otherwise, most likely transcript will be selected.")
 parser_vep_hgvs_post.add_argument(
-    '--ambiguous_hgvs', action="store_const", const=1)
-parser_vep_hgvs_post.add_argument('--appris', action="store_const", const=1)
-parser_vep_hgvs_post.add_argument('--callback')
-parser_vep_hgvs_post.add_argument('--canonical', action="store_const", const=1)
-parser_vep_hgvs_post.add_argument('--ccds', action="store_const", const=1)
-parser_vep_hgvs_post.add_argument('--dbNSFP')
-parser_vep_hgvs_post.add_argument('--dbscSNV', action="store_const", const=1)
-parser_vep_hgvs_post.add_argument('--distance', type=int)
-parser_vep_hgvs_post.add_argument('--domains', action="store_const", const=1)
-parser_vep_hgvs_post.add_argument('--failed', action="store_const", const=1)
-parser_vep_hgvs_post.add_argument('--hgvs', action="store_const", const=1)
-parser_vep_hgvs_post.add_argument('--mane', action="store_const", const=1)
-parser_vep_hgvs_post.add_argument('--merged', action="store_const", const=1)
-parser_vep_hgvs_post.add_argument('--minimal', action="store_const", const=1)
-parser_vep_hgvs_post.add_argument('--mirna', action="store_const", const=1)
-parser_vep_hgvs_post.add_argument('--mutfunc', action="store_const", const=1)
-parser_vep_hgvs_post.add_argument('--numbers', action="store_const", const=1)
-parser_vep_hgvs_post.add_argument('--protein', action="store_const", const=1)
-parser_vep_hgvs_post.add_argument('--refseq', action="store_const", const=1)
+    '--appris', action="store_const", const=1, help="Include APPRIS isoform annotation")
 parser_vep_hgvs_post.add_argument(
-    '--shift_3prime', action="store_const", const=1)
+    '--callback', help="Name of the callback subroutine to be returned by the requested JSONP response. Required ONLY when using JSONP as the serialisation method.")
+parser_vep_hgvs_post.add_argument('--canonical', action="store_const", const=1,
+                                 help="Include a flag indicating the canonical transcript for a gene")
 parser_vep_hgvs_post.add_argument(
-    '--shift_genomic', action="store_const", const=1)
-parser_vep_hgvs_post.add_argument('--transcript_id')
+    '--ccds', action="store_const", const=1, help="Include CCDS transcript identifiers")
 parser_vep_hgvs_post.add_argument(
-    '--transcript_version', action="store_const", const=1)
-parser_vep_hgvs_post.add_argument('--tsl', action="store_const", const=1)
-parser_vep_hgvs_post.add_argument('--uniprot', action="store_const", const=1)
+    '--dbNSFP', help="Include fields from dbNSFP, a database of pathogenicity predictions for missense variants. Multiple fields should be separated by commas.")
+parser_vep_hgvs_post.add_argument('--dbscSNV', action="store_const",
+                                 const=1, help="Predictions for splicing variants from dbscSNV.")
 parser_vep_hgvs_post.add_argument(
-    '--variant_class', action="store_const", const=1)
+    '--distance', type=int, help="Change the distance to transcript for which VEP assigns upstream and downstream consequences")
+parser_vep_hgvs_post.add_argument('--domains', action="store_const",
+                                 const=1, help="Include names of overlapping protein domains")
+parser_vep_hgvs_post.add_argument('--failed', action="store_const", const=1,
+                                 help="When checking for co-located variants, by default variants flagged as failed by Ensembl's QC pipeline will be excluded. Set this flag to 1 to include such variants")
+parser_vep_hgvs_post.add_argument('--hgvs', action="store_const", const=1,
+                                 help="Include HGVS nomenclature based on Ensembl stable identifiers")
+parser_vep_hgvs_post.add_argument('--mane', action="store_const",
+                                 const=1, help="Include MANE Select annotations (GRCh38 only)")
+parser_vep_hgvs_post.add_argument('--merged', action="store_const", const=1,
+                                 help="Use merged Ensembl and RefSeq transcript set to report consequences (human only)")
+parser_vep_hgvs_post.add_argument('--minimal', action="store_const", const=1, help="Convert alleles to their most minimal representation before consequence calculation i.e. sequence that is identical between each pair of reference and alternate alleles is trimmed off from both ends, with coordinates adjusted accordingly. Note this may lead to discrepancies between input coordinates and coordinates reported by VEP relative to transcript sequences")
+parser_vep_hgvs_post.add_argument('--mirna', action="store_const", const=1,
+                                 help="Determines where in the secondary structure of a miRNA a variant falls")
+parser_vep_hgvs_post.add_argument('--mutfunc', action="store_const", const=1,
+                                 help="Predicts destabilization effect of protein structure, interaction, regulatory region etc. caused by a variant as reported by mutfunc database.")
+parser_vep_hgvs_post.add_argument('--numbers', action="store_const", const=1,
+                                 help="Include affected exon and intron positions within the transcript")
 parser_vep_hgvs_post.add_argument(
-    '--vcf_string', action="store_const", const=1)
+    '--protein', action="store_const", const=1, help="Include Ensembl protein identifiers")
+parser_vep_hgvs_post.add_argument('--refseq', action="store_const", const=1,
+                                 help="Use RefSeq transcript set to report consequences (human only)")
 parser_vep_hgvs_post.add_argument(
-    '--xref_refseq', action="store_const", const=1)
+    '--shift_3prime', action="store_const", const=1, help="Shift transcript-overlapping variants as far as possible in the 3' direction before providing consequences")
+parser_vep_hgvs_post.add_argument(
+    '--shift_genomic', action="store_const", const=1, help="Shift all variants as far as possible in the 3' direction before providing consequences")
+parser_vep_hgvs_post.add_argument(
+    '--transcript_id', help="Filter results by Transcript ID")
+parser_vep_hgvs_post.add_argument(
+    '--transcript_version', action="store_const", const=1, help="Add version numbers to Ensembl transcript identifiers")
+parser_vep_hgvs_post.add_argument('--tsl', action="store_const",
+                                 const=1, help="Include transcript support level (TSL) annotation")
+parser_vep_hgvs_post.add_argument('--uniprot', action="store_const", const=1,
+                                 help="Include best match accessions for translated protein products from three UniProt-related databases (SWISSPROT, TREMBL and UniParc)")
+parser_vep_hgvs_post.add_argument(
+    '--variant_class', action="store_const", const=1, help="Output the Sequence Ontology variant class for the input variant")
+parser_vep_hgvs_post.add_argument(
+    '--vcf_string', action="store_const", const=1, help="Include alleles in VCF format")
+parser_vep_hgvs_post.add_argument(
+    '--xref_refseq', action="store_const", const=1, help="Include aligned RefSeq mRNA identifiers for transcript. NB: theRefSeq and Ensembl transcripts aligned in this way MAY NOT, AND FREQUENTLY WILL NOT, match exactly in sequence, exon structure and protein product")
 # ---------------------------------------------------------------------------------------------
 # vep_id_get
 # ---------------------------------------------------------------------------------------------
-parser_vep_id_get = subparsers.add_parser("vep_id_get")
+parser_vep_id_get = subparsers.add_parser("vep_id_get", help="Fetch variant consequences based on a variant identifier")
 parser_vep_id_get.add_argument(
-    'id', help='Variant identifier')
-parser_vep_id_get.add_argument('--species', default="human", help='Species')
-parser_vep_id_get.add_argument('--format', default="json", help='Format')
+    'id', help='Query ID. Supports dbSNP, COSMIC and HGMD identifiers')
 parser_vep_id_get.add_argument(
-    '--AncestralAllele', action="store_const", const=1)
-parser_vep_id_get.add_argument('--Blosum62', action="store_const", const=1)
-parser_vep_id_get.add_argument('--CADD', action="store_const", const=1)
-parser_vep_id_get.add_argument('--Conservation', action="store_const", const=1)
-parser_vep_id_get.add_argument('--DisGeNET', action="store_const", const=1)
-parser_vep_id_get.add_argument('--EVE', action="store_const", const=1)
-parser_vep_id_get.add_argument('--GO', action="store_const", const=1)
-parser_vep_id_get.add_argument('--GeneSplicer', action="store_const", const=1)
-parser_vep_id_get.add_argument('--IntAct', action="store_const", const=1)
-parser_vep_id_get.add_argument('--LoF', action="store_const", const=1)
-parser_vep_id_get.add_argument('--Mastermind', action="store_const", const=1)
-parser_vep_id_get.add_argument('--MaxEntScan', action="store_const", const=1)
-parser_vep_id_get.add_argument('--NMD', action="store_const", const=1)
-parser_vep_id_get.add_argument('--Phenotypes', action="store_const", const=1)
-parser_vep_id_get.add_argument('--SpliceAI', type=int)
-parser_vep_id_get.add_argument('--UTRAnnotator', action="store_const", const=1)
-parser_vep_id_get.add_argument('--appris', action="store_const", const=1)
-parser_vep_id_get.add_argument('--callback')
-parser_vep_id_get.add_argument('--canonical', action="store_const", const=1)
-parser_vep_id_get.add_argument('--ccds', action="store_const", const=1)
-parser_vep_id_get.add_argument('--dbNSFP')
-parser_vep_id_get.add_argument('--dbscSNV', action="store_const", const=1)
-parser_vep_id_get.add_argument('--distance', type=int)
-parser_vep_id_get.add_argument('--domains', action="store_const", const=1)
-parser_vep_id_get.add_argument('--failed', action="store_const", const=1)
-parser_vep_id_get.add_argument('--hgvs', action="store_const", const=1)
-parser_vep_id_get.add_argument('--mane', action="store_const", const=1)
-parser_vep_id_get.add_argument('--merged', action="store_const", const=1)
-parser_vep_id_get.add_argument('--minimal', action="store_const", const=1)
-parser_vep_id_get.add_argument('--mirna', action="store_const", const=1)
-parser_vep_id_get.add_argument('--mutfunc', action="store_const", const=1)
-parser_vep_id_get.add_argument('--numbers', action="store_const", const=1)
-parser_vep_id_get.add_argument('--protein', action="store_const", const=1)
-parser_vep_id_get.add_argument('--refseq', action="store_const", const=1)
-parser_vep_id_get.add_argument('--shift_3prime', action="store_const", const=1)
+    '--species', default="human", help='Species name/alias')
 parser_vep_id_get.add_argument(
-    '--shift_genomic', action="store_const", const=1)
-parser_vep_id_get.add_argument('--transcript_id')
-parser_vep_id_get.add_argument('--transcript_version',
-                               action="store_const", const=1)
-parser_vep_id_get.add_argument('--tsl', action="store_const", const=1)
-parser_vep_id_get.add_argument('--uniprot', action="store_const", const=1)
+    '--format', default="json", help='Response formats')
 parser_vep_id_get.add_argument(
-    '--variant_class', action="store_const", const=1)
-parser_vep_id_get.add_argument('--vcf_string', action="store_const", const=1)
-parser_vep_id_get.add_argument('--xref_refseq', action="store_const", const=1)
+    '--AncestralAllele', action="store_const", const=1, help="Retrieves the ancestral allele for variants inferred from the Ensembl Compara Enredo-Pecan-Ortheus (EPO) pipeline")
+parser_vep_id_get.add_argument('--Blosum62', action="store_const",
+                                 const=1, help="Include BLOSUM62 amino acid conservation score")
+parser_vep_id_get.add_argument('--CADD', action="store_const", const=1,
+                                 help="Include CADD (Combined Annotation Dependent Depletion) deleteriousness scores for single nucleotide variants.")
+parser_vep_id_get.add_argument(
+    '--Conservation', action="store_const", const=1, help="Retrieves a conservation score from the Ensembl Compara databases for variant positions")
+parser_vep_id_get.add_argument('--DisGeNET', action="store_const", const=1,
+                                 help="Retrieves Variant-Disease-PMID associations from the DisGeNET database")
+parser_vep_id_get.add_argument('--EVE', action="store_const", const=1,
+                                 help="EVE (evolutionary model of variant effect) is a computational method for the classification of human genetic variants trained solely on evolutionary sequences.")
+parser_vep_id_get.add_argument('--GO', action="store_const", const=1,
+                                 help="Retrieves Gene Ontology terms associated with transcripts/translations")
+parser_vep_id_get.add_argument(
+    '--GeneSplicer', action="store_const", const=1, help="Detects splice sites in genomic DNA")
+parser_vep_id_get.add_argument('--IntAct', action="store_const", const=1,
+                                 help="Provides molecular interaction data for variants as reported by IntAct database.")
+parser_vep_id_get.add_argument('--LoF', action="store_const", const=1,
+                                 help="LOFTEE identifies LoF (loss-of-function) variation.")
+parser_vep_id_get.add_argument('--Mastermind', action="store_const", const=1,
+                                 help="Variants that have clinical evidence cited in the medical literature reported by Mastermind Genomic Search Engine")
+parser_vep_id_get.add_argument('--MaxEntScan', action="store_const", const=1,
+                                 help="Sequence motif and maximum entropy based splice site consensus predictions")
+parser_vep_id_get.add_argument('--NMD', action="store_const", const=1,
+                                 help="Predicts if a variant allows the transcript escape nonsense-mediated mRNA decay.")
+parser_vep_id_get.add_argument('--Phenotypes', action="store_const",
+                                 const=1, help="Retrieves overlapping phenotype information")
+parser_vep_id_get.add_argument('--SpliceAI', type=int, help="""Retrieves pre-calculated annotations from SpliceAI a deep neural network, developed by Illumina, Inc that predicts splice junctions from an arbitrary pre-mRNA transcript sequence. Used for non-commercial purposes. (plugin details)
+The pre-calculated annotations for all possible single nucleotide substitutions can be retrieved from: value 1) Ensembl/GENCODE v24 canonical transcripts (masked scores); value 2) Ensembl/GENCODE v37 MANE transcripts (raw scores).
+Note: The pre-calculated annotations for 1 base insertions, and 1-4 base deletions are only available for Ensembl/GENCODE v24 canonical transcripts.""")
+parser_vep_id_get.add_argument(
+    '--UTRAnnotator', action="store_const", const=1, help="Annotates high-impact five prime UTR variants either creating new upstream ORFs or disrupting existing upstream ORFs")
+parser_vep_id_get.add_argument(
+    '--appris', action="store_const", const=1, help="Include APPRIS isoform annotation")
+parser_vep_id_get.add_argument(
+    '--callback', help="Name of the callback subroutine to be returned by the requested JSONP response. Required ONLY when using JSONP as the serialisation method.")
+parser_vep_id_get.add_argument('--canonical', action="store_const", const=1,
+                                 help="Include a flag indicating the canonical transcript for a gene")
+parser_vep_id_get.add_argument(
+    '--ccds', action="store_const", const=1, help="Include CCDS transcript identifiers")
+parser_vep_id_get.add_argument(
+    '--dbNSFP', help="Include fields from dbNSFP, a database of pathogenicity predictions for missense variants. Multiple fields should be separated by commas.")
+parser_vep_id_get.add_argument('--dbscSNV', action="store_const",
+                                 const=1, help="Predictions for splicing variants from dbscSNV.")
+parser_vep_id_get.add_argument(
+    '--distance', type=int, help="Change the distance to transcript for which VEP assigns upstream and downstream consequences")
+parser_vep_id_get.add_argument('--domains', action="store_const",
+                                 const=1, help="Include names of overlapping protein domains")
+parser_vep_id_get.add_argument('--failed', action="store_const", const=1,
+                                 help="When checking for co-located variants, by default variants flagged as failed by Ensembl's QC pipeline will be excluded. Set this flag to 1 to include such variants")
+parser_vep_id_get.add_argument('--hgvs', action="store_const", const=1,
+                                 help="Include HGVS nomenclature based on Ensembl stable identifiers")
+parser_vep_id_get.add_argument('--mane', action="store_const",
+                                 const=1, help="Include MANE Select annotations (GRCh38 only)")
+parser_vep_id_get.add_argument('--merged', action="store_const", const=1,
+                                 help="Use merged Ensembl and RefSeq transcript set to report consequences (human only)")
+parser_vep_id_get.add_argument('--minimal', action="store_const", const=1, help="Convert alleles to their most minimal representation before consequence calculation i.e. sequence that is identical between each pair of reference and alternate alleles is trimmed off from both ends, with coordinates adjusted accordingly. Note this may lead to discrepancies between input coordinates and coordinates reported by VEP relative to transcript sequences")
+parser_vep_id_get.add_argument('--mirna', action="store_const", const=1,
+                                 help="Determines where in the secondary structure of a miRNA a variant falls")
+parser_vep_id_get.add_argument('--mutfunc', action="store_const", const=1,
+                                 help="Predicts destabilization effect of protein structure, interaction, regulatory region etc. caused by a variant as reported by mutfunc database.")
+parser_vep_id_get.add_argument('--numbers', action="store_const", const=1,
+                                 help="Include affected exon and intron positions within the transcript")
+parser_vep_id_get.add_argument(
+    '--protein', action="store_const", const=1, help="Include Ensembl protein identifiers")
+parser_vep_id_get.add_argument('--refseq', action="store_const", const=1,
+                                 help="Use RefSeq transcript set to report consequences (human only)")
+parser_vep_id_get.add_argument(
+    '--shift_3prime', action="store_const", const=1, help="Shift transcript-overlapping variants as far as possible in the 3' direction before providing consequences")
+parser_vep_id_get.add_argument(
+    '--shift_genomic', action="store_const", const=1, help="Shift all variants as far as possible in the 3' direction before providing consequences")
+parser_vep_id_get.add_argument(
+    '--transcript_id', help="Filter results by Transcript ID")
+parser_vep_id_get.add_argument(
+    '--transcript_version', action="store_const", const=1, help="Add version numbers to Ensembl transcript identifiers")
+parser_vep_id_get.add_argument('--tsl', action="store_const",
+                                 const=1, help="Include transcript support level (TSL) annotation")
+parser_vep_id_get.add_argument('--uniprot', action="store_const", const=1,
+                                 help="Include best match accessions for translated protein products from three UniProt-related databases (SWISSPROT, TREMBL and UniParc)")
+parser_vep_id_get.add_argument(
+    '--variant_class', action="store_const", const=1, help="Output the Sequence Ontology variant class for the input variant")
+parser_vep_id_get.add_argument(
+    '--vcf_string', action="store_const", const=1, help="Include alleles in VCF format")
+parser_vep_id_get.add_argument(
+    '--xref_refseq', action="store_const", const=1, help="Include aligned RefSeq mRNA identifiers for transcript. NB: theRefSeq and Ensembl transcripts aligned in this way MAY NOT, AND FREQUENTLY WILL NOT, match exactly in sequence, exon structure and protein product")
 # ----------------------------------------------------------------------------------------------
 # vep_id_post
 # ---------------------------------------------------------------------------------------------
-parser_vep_id_post = subparsers.add_parser("vep_id_post")
+parser_vep_id_post = subparsers.add_parser("vep_id_post", help="Fetch variant consequences for multiple ids")
 parser_vep_id_post.add_argument(
-    'id', help='Variant identifier', action="extend", nargs="+")
-parser_vep_id_post.add_argument('--species', default="human", help='Species')
-parser_vep_id_post.add_argument('--format', default="json", help='Format')
+    'id', help='Query ID. Supports dbSNP, COSMIC and HGMD identifiers', action="extend", nargs="+")
 parser_vep_id_post.add_argument(
-    '--AncestralAllele', action="store_const", const=1)
-parser_vep_id_post.add_argument('--Blosum62', action="store_const", const=1)
-parser_vep_id_post.add_argument('--CADD', action="store_const", const=1)
-parser_vep_id_post.add_argument('--DisGeNET', action="store_const", const=1)
-parser_vep_id_post.add_argument('--EVE', action="store_const", const=1)
-parser_vep_id_post.add_argument('--GO', action="store_const", const=1)
-parser_vep_id_post.add_argument('--GeneSplicer', action="store_const", const=1)
-parser_vep_id_post.add_argument('--IntAct', action="store_const", const=1)
-parser_vep_id_post.add_argument('--LoF', action="store_const", const=1)
-parser_vep_id_post.add_argument('--Mastermind', action="store_const", const=1)
-parser_vep_id_post.add_argument('--MaxEntScan', action="store_const", const=1)
-parser_vep_id_post.add_argument('--NMD', action="store_const", const=1)
-parser_vep_id_post.add_argument('--Phenotypes', action="store_const", const=1)
-parser_vep_id_post.add_argument('--SpliceAI', type=int)
+    '--species', default="human", help='Species name/alias')
 parser_vep_id_post.add_argument(
-    '--UTRAnnotator', action="store_const", const=1)
-parser_vep_id_post.add_argument('--appris', action="store_const", const=1)
-parser_vep_id_post.add_argument('--callback')
-parser_vep_id_post.add_argument('--canonical', action="store_const", const=1)
-parser_vep_id_post.add_argument('--ccds', action="store_const", const=1)
-parser_vep_id_post.add_argument('--dbNSFP')
-parser_vep_id_post.add_argument('--dbscSNV', action="store_const", const=1)
-parser_vep_id_post.add_argument('--distance', type=int)
-parser_vep_id_post.add_argument('--domains', action="store_const", const=1)
-parser_vep_id_post.add_argument('--failed', action="store_const", const=1)
-parser_vep_id_post.add_argument('--hgvs', action="store_const", const=1)
-parser_vep_id_post.add_argument('--mane', action="store_const", const=1)
-parser_vep_id_post.add_argument('--merged', action="store_const", const=1)
-parser_vep_id_post.add_argument('--minimal', action="store_const", const=1)
-parser_vep_id_post.add_argument('--mirna', action="store_const", const=1)
-parser_vep_id_post.add_argument('--mutfunc', action="store_const", const=1)
-parser_vep_id_post.add_argument('--numbers', action="store_const", const=1)
-parser_vep_id_post.add_argument('--protein', action="store_const", const=1)
-parser_vep_id_post.add_argument('--refseq', action="store_const", const=1)
+    '--format', default="json", help='Response formats')
 parser_vep_id_post.add_argument(
-    '--shift_3prime', action="store_const", const=1)
+    '--AncestralAllele', action="store_const", const=1, help="Retrieves the ancestral allele for variants inferred from the Ensembl Compara Enredo-Pecan-Ortheus (EPO) pipeline")
+parser_vep_id_post.add_argument('--Blosum62', action="store_const",
+                                 const=1, help="Include BLOSUM62 amino acid conservation score")
+parser_vep_id_post.add_argument('--CADD', action="store_const", const=1,
+                                 help="Include CADD (Combined Annotation Dependent Depletion) deleteriousness scores for single nucleotide variants.")
+parser_vep_id_post.add_argument('--DisGeNET', action="store_const", const=1,
+                                 help="Retrieves Variant-Disease-PMID associations from the DisGeNET database")
+parser_vep_id_post.add_argument('--EVE', action="store_const", const=1,
+                                 help="EVE (evolutionary model of variant effect) is a computational method for the classification of human genetic variants trained solely on evolutionary sequences.")
+parser_vep_id_post.add_argument('--GO', action="store_const", const=1,
+                                 help="Retrieves Gene Ontology terms associated with transcripts/translations")
 parser_vep_id_post.add_argument(
-    '--shift_genomic', action="store_const", const=1)
-parser_vep_id_post.add_argument('--transcript_id')
-parser_vep_id_post.add_argument('--transcript_version',
-                                action="store_const", const=1)
-parser_vep_id_post.add_argument('--tsl', action="store_const", const=1)
-parser_vep_id_post.add_argument('--uniprot', action="store_const", const=1)
+    '--GeneSplicer', action="store_const", const=1, help="Detects splice sites in genomic DNA")
+parser_vep_id_post.add_argument('--IntAct', action="store_const", const=1,
+                                 help="Provides molecular interaction data for variants as reported by IntAct database.")
+parser_vep_id_post.add_argument('--LoF', action="store_const", const=1,
+                                 help="LOFTEE identifies LoF (loss-of-function) variation.")
+parser_vep_id_post.add_argument('--Mastermind', action="store_const", const=1,
+                                 help="Variants that have clinical evidence cited in the medical literature reported by Mastermind Genomic Search Engine")
+parser_vep_id_post.add_argument('--MaxEntScan', action="store_const", const=1,
+                                 help="Sequence motif and maximum entropy based splice site consensus predictions")
+parser_vep_id_post.add_argument('--NMD', action="store_const", const=1,
+                                 help="Predicts if a variant allows the transcript escape nonsense-mediated mRNA decay.")
+parser_vep_id_post.add_argument('--Phenotypes', action="store_const",
+                                 const=1, help="Retrieves overlapping phenotype information")
+parser_vep_id_post.add_argument('--SpliceAI', type=int, help="""Retrieves pre-calculated annotations from SpliceAI a deep neural network, developed by Illumina, Inc that predicts splice junctions from an arbitrary pre-mRNA transcript sequence. Used for non-commercial purposes. (plugin details)
+The pre-calculated annotations for all possible single nucleotide substitutions can be retrieved from: value 1) Ensembl/GENCODE v24 canonical transcripts (masked scores); value 2) Ensembl/GENCODE v37 MANE transcripts (raw scores).
+Note: The pre-calculated annotations for 1 base insertions, and 1-4 base deletions are only available for Ensembl/GENCODE v24 canonical transcripts.""")
 parser_vep_id_post.add_argument(
-    '--variant_class', action="store_const", const=1)
-parser_vep_id_post.add_argument('--vcf_string', action="store_const", const=1)
-parser_vep_id_post.add_argument('--xref_refseq', action="store_const", const=1)
+    '--UTRAnnotator', action="store_const", const=1, help="Annotates high-impact five prime UTR variants either creating new upstream ORFs or disrupting existing upstream ORFs")
+parser_vep_id_post.add_argument(
+    '--appris', action="store_const", const=1, help="Include APPRIS isoform annotation")
+parser_vep_id_post.add_argument(
+    '--callback', help="Name of the callback subroutine to be returned by the requested JSONP response. Required ONLY when using JSONP as the serialisation method.")
+parser_vep_id_post.add_argument('--canonical', action="store_const", const=1,
+                                 help="Include a flag indicating the canonical transcript for a gene")
+parser_vep_id_post.add_argument(
+    '--ccds', action="store_const", const=1, help="Include CCDS transcript identifiers")
+parser_vep_id_post.add_argument(
+    '--dbNSFP', help="Include fields from dbNSFP, a database of pathogenicity predictions for missense variants. Multiple fields should be separated by commas.")
+parser_vep_id_post.add_argument('--dbscSNV', action="store_const",
+                                 const=1, help="Predictions for splicing variants from dbscSNV.")
+parser_vep_id_post.add_argument(
+    '--distance', type=int, help="Change the distance to transcript for which VEP assigns upstream and downstream consequences")
+parser_vep_id_post.add_argument('--domains', action="store_const",
+                                 const=1, help="Include names of overlapping protein domains")
+parser_vep_id_post.add_argument('--failed', action="store_const", const=1,
+                                 help="When checking for co-located variants, by default variants flagged as failed by Ensembl's QC pipeline will be excluded. Set this flag to 1 to include such variants")
+parser_vep_id_post.add_argument('--hgvs', action="store_const", const=1,
+                                 help="Include HGVS nomenclature based on Ensembl stable identifiers")
+parser_vep_id_post.add_argument('--mane', action="store_const",
+                                 const=1, help="Include MANE Select annotations (GRCh38 only)")
+parser_vep_id_post.add_argument('--merged', action="store_const", const=1,
+                                 help="Use merged Ensembl and RefSeq transcript set to report consequences (human only)")
+parser_vep_id_post.add_argument('--minimal', action="store_const", const=1, help="Convert alleles to their most minimal representation before consequence calculation i.e. sequence that is identical between each pair of reference and alternate alleles is trimmed off from both ends, with coordinates adjusted accordingly. Note this may lead to discrepancies between input coordinates and coordinates reported by VEP relative to transcript sequences")
+parser_vep_id_post.add_argument('--mirna', action="store_const", const=1,
+                                 help="Determines where in the secondary structure of a miRNA a variant falls")
+parser_vep_id_post.add_argument('--mutfunc', action="store_const", const=1,
+                                 help="Predicts destabilization effect of protein structure, interaction, regulatory region etc. caused by a variant as reported by mutfunc database.")
+parser_vep_id_post.add_argument('--numbers', action="store_const", const=1,
+                                 help="Include affected exon and intron positions within the transcript")
+parser_vep_id_post.add_argument(
+    '--protein', action="store_const", const=1, help="Include Ensembl protein identifiers")
+parser_vep_id_post.add_argument('--refseq', action="store_const", const=1,
+                                 help="Use RefSeq transcript set to report consequences (human only)")
+parser_vep_id_post.add_argument(
+    '--shift_3prime', action="store_const", const=1, help="Shift transcript-overlapping variants as far as possible in the 3' direction before providing consequences")
+parser_vep_id_post.add_argument(
+    '--shift_genomic', action="store_const", const=1, help="Shift all variants as far as possible in the 3' direction before providing consequences")
+parser_vep_id_post.add_argument(
+    '--transcript_id', help="Filter results by Transcript ID")
+parser_vep_id_post.add_argument(
+    '--transcript_version', action="store_const", const=1, help="Add version numbers to Ensembl transcript identifiers")
+parser_vep_id_post.add_argument('--tsl', action="store_const",
+                                 const=1, help="Include transcript support level (TSL) annotation")
+parser_vep_id_post.add_argument('--uniprot', action="store_const", const=1,
+                                 help="Include best match accessions for translated protein products from three UniProt-related databases (SWISSPROT, TREMBL and UniParc)")
+parser_vep_id_post.add_argument(
+    '--variant_class', action="store_const", const=1, help="Output the Sequence Ontology variant class for the input variant")
+parser_vep_id_post.add_argument(
+    '--vcf_string', action="store_const", const=1, help="Include alleles in VCF format")
+parser_vep_id_post.add_argument(
+    '--xref_refseq', action="store_const", const=1, help="Include aligned RefSeq mRNA identifiers for transcript. NB: theRefSeq and Ensembl transcripts aligned in this way MAY NOT, AND FREQUENTLY WILL NOT, match exactly in sequence, exon structure and protein product")
 # ---------------------------------------------------------------------------------------------
 # vep_region_get
 # ---------------------------------------------------------------------------------------------
-parser_vep_region_get = subparsers.add_parser("vep_region_get")
-parser_vep_region_get.add_argument('region', help='Ensembl VEP format')
-parser_vep_region_get.add_argument('allele', help='Allele')
+parser_vep_region_get = subparsers.add_parser("vep_region_get", help="Fetch variant consequences")
+parser_vep_region_get.add_argument('region', help='Query region. We only support the current assembly')
+parser_vep_region_get.add_argument('allele', help='Variation allele')
 parser_vep_region_get.add_argument(
-    '--species', default="human", help='Species')
-parser_vep_region_get.add_argument('--format', default="json", help='Format')
+    '--species', default="human", help='Species name/alias')
 parser_vep_region_get.add_argument(
-    '--AncestralAllele', action="store_const", const=1)
-parser_vep_region_get.add_argument('--Blosum62', action="store_const", const=1)
-parser_vep_region_get.add_argument('--CADD', action="store_const", const=1)
+    '--format', default="json", help='Response formats')
 parser_vep_region_get.add_argument(
-    '--Conservation', action="store_const", const=1)
-parser_vep_region_get.add_argument('--DisGeNET', action="store_const", const=1)
-parser_vep_region_get.add_argument('--EVE', action="store_const", const=1)
-parser_vep_region_get.add_argument('--GO', action="store_const", const=1)
+    '--AncestralAllele', action="store_const", const=1, help="Retrieves the ancestral allele for variants inferred from the Ensembl Compara Enredo-Pecan-Ortheus (EPO) pipeline")
+parser_vep_region_get.add_argument('--Blosum62', action="store_const",
+                                 const=1, help="Include BLOSUM62 amino acid conservation score")
+parser_vep_region_get.add_argument('--CADD', action="store_const", const=1,
+                                 help="Include CADD (Combined Annotation Dependent Depletion) deleteriousness scores for single nucleotide variants.")
 parser_vep_region_get.add_argument(
-    '--GeneSplicer', action="store_const", const=1)
-parser_vep_region_get.add_argument('--IntAct', action="store_const", const=1)
-parser_vep_region_get.add_argument('--LoF', action="store_const", const=1)
+    '--Conservation', action="store_const", const=1, help="Retrieves a conservation score from the Ensembl Compara databases for variant positions")
+parser_vep_region_get.add_argument('--DisGeNET', action="store_const", const=1,
+                                 help="Retrieves Variant-Disease-PMID associations from the DisGeNET database")
+parser_vep_region_get.add_argument('--EVE', action="store_const", const=1,
+                                 help="EVE (evolutionary model of variant effect) is a computational method for the classification of human genetic variants trained solely on evolutionary sequences.")
+parser_vep_region_get.add_argument('--GO', action="store_const", const=1,
+                                 help="Retrieves Gene Ontology terms associated with transcripts/translations")
 parser_vep_region_get.add_argument(
-    '--Mastermind', action="store_const", const=1)
+    '--GeneSplicer', action="store_const", const=1, help="Detects splice sites in genomic DNA")
+parser_vep_region_get.add_argument('--IntAct', action="store_const", const=1,
+                                 help="Provides molecular interaction data for variants as reported by IntAct database.")
+parser_vep_region_get.add_argument('--LoF', action="store_const", const=1,
+                                 help="LOFTEE identifies LoF (loss-of-function) variation.")
+parser_vep_region_get.add_argument('--Mastermind', action="store_const", const=1,
+                                 help="Variants that have clinical evidence cited in the medical literature reported by Mastermind Genomic Search Engine")
+parser_vep_region_get.add_argument('--MaxEntScan', action="store_const", const=1,
+                                 help="Sequence motif and maximum entropy based splice site consensus predictions")
+parser_vep_region_get.add_argument('--NMD', action="store_const", const=1,
+                                 help="Predicts if a variant allows the transcript escape nonsense-mediated mRNA decay.")
+parser_vep_region_get.add_argument('--Phenotypes', action="store_const",
+                                 const=1, help="Retrieves overlapping phenotype information")
+parser_vep_region_get.add_argument('--SpliceAI', type=int, help="""Retrieves pre-calculated annotations from SpliceAI a deep neural network, developed by Illumina, Inc that predicts splice junctions from an arbitrary pre-mRNA transcript sequence. Used for non-commercial purposes. (plugin details)
+The pre-calculated annotations for all possible single nucleotide substitutions can be retrieved from: value 1) Ensembl/GENCODE v24 canonical transcripts (masked scores); value 2) Ensembl/GENCODE v37 MANE transcripts (raw scores).
+Note: The pre-calculated annotations for 1 base insertions, and 1-4 base deletions are only available for Ensembl/GENCODE v24 canonical transcripts.""")
 parser_vep_region_get.add_argument(
-    '--MaxEntScan', action="store_const", const=1)
-parser_vep_region_get.add_argument('--NMD', action="store_const", const=1)
+    '--UTRAnnotator', action="store_const", const=1, help="Annotates high-impact five prime UTR variants either creating new upstream ORFs or disrupting existing upstream ORFs")
 parser_vep_region_get.add_argument(
-    '--Phenotypes', action="store_const", const=1)
-parser_vep_region_get.add_argument('--SpliceAI', type=int)
+    '--appris', action="store_const", const=1, help="Include APPRIS isoform annotation")
 parser_vep_region_get.add_argument(
-    '--UTRAnnotator', action="store_const", const=1)
-parser_vep_region_get.add_argument('--appris', action="store_const", const=1)
-parser_vep_region_get.add_argument('--callback')
+    '--callback', help="Name of the callback subroutine to be returned by the requested JSONP response. Required ONLY when using JSONP as the serialisation method.")
+parser_vep_region_get.add_argument('--canonical', action="store_const", const=1,
+                                 help="Include a flag indicating the canonical transcript for a gene")
 parser_vep_region_get.add_argument(
-    '--canonical', action="store_const", const=1)
-parser_vep_region_get.add_argument('--ccds', action="store_const", const=1)
-parser_vep_region_get.add_argument('--dbNSFP')
-parser_vep_region_get.add_argument('--dbscSNV', action="store_const", const=1)
-parser_vep_region_get.add_argument('--distance', type=int)
-parser_vep_region_get.add_argument('--domains', action="store_const", const=1)
-parser_vep_region_get.add_argument('--failed', action="store_const", const=1)
-parser_vep_region_get.add_argument('--hgvs', action="store_const", const=1)
-parser_vep_region_get.add_argument('--mane', action="store_const", const=1)
-parser_vep_region_get.add_argument('--merged', action="store_const", const=1)
-parser_vep_region_get.add_argument('--minimal', action="store_const", const=1)
-parser_vep_region_get.add_argument('--mirna', action="store_const", const=1)
-parser_vep_region_get.add_argument('--mutfunc', action="store_const", const=1)
-parser_vep_region_get.add_argument('--numbers', action="store_const", const=1)
-parser_vep_region_get.add_argument('--protein', action="store_const", const=1)
-parser_vep_region_get.add_argument('--refseq', action="store_const", const=1)
+    '--ccds', action="store_const", const=1, help="Include CCDS transcript identifiers")
 parser_vep_region_get.add_argument(
-    '--shift_3prime', action="store_const", const=1)
+    '--dbNSFP', help="Include fields from dbNSFP, a database of pathogenicity predictions for missense variants. Multiple fields should be separated by commas.")
+parser_vep_region_get.add_argument('--dbscSNV', action="store_const",
+                                 const=1, help="Predictions for splicing variants from dbscSNV.")
 parser_vep_region_get.add_argument(
-    '--shift_genomic', action="store_const", const=1)
-parser_vep_region_get.add_argument('--transcript_id')
-parser_vep_region_get.add_argument('--transcript_version',
-                                   action="store_const", const=1)
-parser_vep_region_get.add_argument('--tsl', action="store_const", const=1)
-parser_vep_region_get.add_argument('--uniprot', action="store_const", const=1)
+    '--distance', type=int, help="Change the distance to transcript for which VEP assigns upstream and downstream consequences")
+parser_vep_region_get.add_argument('--domains', action="store_const",
+                                 const=1, help="Include names of overlapping protein domains")
+parser_vep_region_get.add_argument('--failed', action="store_const", const=1,
+                                 help="When checking for co-located variants, by default variants flagged as failed by Ensembl's QC pipeline will be excluded. Set this flag to 1 to include such variants")
+parser_vep_region_get.add_argument('--hgvs', action="store_const", const=1,
+                                 help="Include HGVS nomenclature based on Ensembl stable identifiers")
+parser_vep_region_get.add_argument('--mane', action="store_const",
+                                 const=1, help="Include MANE Select annotations (GRCh38 only)")
+parser_vep_region_get.add_argument('--merged', action="store_const", const=1,
+                                 help="Use merged Ensembl and RefSeq transcript set to report consequences (human only)")
+parser_vep_region_get.add_argument('--minimal', action="store_const", const=1, help="Convert alleles to their most minimal representation before consequence calculation i.e. sequence that is identical between each pair of reference and alternate alleles is trimmed off from both ends, with coordinates adjusted accordingly. Note this may lead to discrepancies between input coordinates and coordinates reported by VEP relative to transcript sequences")
+parser_vep_region_get.add_argument('--mirna', action="store_const", const=1,
+                                 help="Determines where in the secondary structure of a miRNA a variant falls")
+parser_vep_region_get.add_argument('--mutfunc', action="store_const", const=1,
+                                 help="Predicts destabilization effect of protein structure, interaction, regulatory region etc. caused by a variant as reported by mutfunc database.")
+parser_vep_region_get.add_argument('--numbers', action="store_const", const=1,
+                                 help="Include affected exon and intron positions within the transcript")
 parser_vep_region_get.add_argument(
-    '--variant_class', action="store_const", const=1)
+    '--protein', action="store_const", const=1, help="Include Ensembl protein identifiers")
+parser_vep_region_get.add_argument('--refseq', action="store_const", const=1,
+                                 help="Use RefSeq transcript set to report consequences (human only)")
 parser_vep_region_get.add_argument(
-    '--vcf_string', action="store_const", const=1)
+    '--shift_3prime', action="store_const", const=1, help="Shift transcript-overlapping variants as far as possible in the 3' direction before providing consequences")
 parser_vep_region_get.add_argument(
-    '--xref_refseq', action="store_const", const=1)
+    '--shift_genomic', action="store_const", const=1, help="Shift all variants as far as possible in the 3' direction before providing consequences")
+parser_vep_region_get.add_argument(
+    '--transcript_id', help="Filter results by Transcript ID")
+parser_vep_region_get.add_argument(
+    '--transcript_version', action="store_const", const=1, help="Add version numbers to Ensembl transcript identifiers")
+parser_vep_region_get.add_argument('--tsl', action="store_const",
+                                 const=1, help="Include transcript support level (TSL) annotation")
+parser_vep_region_get.add_argument('--uniprot', action="store_const", const=1,
+                                 help="Include best match accessions for translated protein products from three UniProt-related databases (SWISSPROT, TREMBL and UniParc)")
+parser_vep_region_get.add_argument(
+    '--variant_class', action="store_const", const=1, help="Output the Sequence Ontology variant class for the input variant")
+parser_vep_region_get.add_argument(
+    '--vcf_string', action="store_const", const=1, help="Include alleles in VCF format")
+parser_vep_region_get.add_argument(
+    '--xref_refseq', action="store_const", const=1, help="Include aligned RefSeq mRNA identifiers for transcript. NB: theRefSeq and Ensembl transcripts aligned in this way MAY NOT, AND FREQUENTLY WILL NOT, match exactly in sequence, exon structure and protein product")
 # ---------------------------------------------------------------------------------------------
 # vep_region_post
 # ---------------------------------------------------------------------------------------------
-parser_vep_region_post = subparsers.add_parser("vep_region_post")
+parser_vep_region_post = subparsers.add_parser("vep_region_post", help="Fetch variant consequences for multiple regions")
+parser_vep_region_post.add_argument('region', nargs='+', action='extend')
 parser_vep_region_post.add_argument(
-    'region', help='VCF format', nargs='+', action='extend')
+    '--species', default="human", help='Species name/alias')
 parser_vep_region_post.add_argument(
-    '--species', default="human", help='Species')
-parser_vep_region_post.add_argument('--format', default="json", help='Format')
+    '--format', default="json", help='Response formats')
 parser_vep_region_post.add_argument(
-    '--AncestralAllele', action="store_const", const=1)
+    '--AncestralAllele', action="store_const", const=1, help="Retrieves the ancestral allele for variants inferred from the Ensembl Compara Enredo-Pecan-Ortheus (EPO) pipeline")
+parser_vep_region_post.add_argument('--Blosum62', action="store_const",
+                                 const=1, help="Include BLOSUM62 amino acid conservation score")
+parser_vep_region_post.add_argument('--CADD', action="store_const", const=1,
+                                 help="Include CADD (Combined Annotation Dependent Depletion) deleteriousness scores for single nucleotide variants.")
+parser_vep_region_post.add_argument('--DisGeNET', action="store_const", const=1,
+                                 help="Retrieves Variant-Disease-PMID associations from the DisGeNET database")
+parser_vep_region_post.add_argument('--EVE', action="store_const", const=1,
+                                 help="EVE (evolutionary model of variant effect) is a computational method for the classification of human genetic variants trained solely on evolutionary sequences.")
+parser_vep_region_post.add_argument('--GO', action="store_const", const=1,
+                                 help="Retrieves Gene Ontology terms associated with transcripts/translations")
 parser_vep_region_post.add_argument(
-    '--Blosum62', action="store_const", const=1)
-parser_vep_region_post.add_argument('--CADD', action="store_const", const=1)
+    '--GeneSplicer', action="store_const", const=1, help="Detects splice sites in genomic DNA")
+parser_vep_region_post.add_argument('--IntAct', action="store_const", const=1,
+                                 help="Provides molecular interaction data for variants as reported by IntAct database.")
+parser_vep_region_post.add_argument('--LoF', action="store_const", const=1,
+                                 help="LOFTEE identifies LoF (loss-of-function) variation.")
+parser_vep_region_post.add_argument('--Mastermind', action="store_const", const=1,
+                                 help="Variants that have clinical evidence cited in the medical literature reported by Mastermind Genomic Search Engine")
+parser_vep_region_post.add_argument('--MaxEntScan', action="store_const", const=1,
+                                 help="Sequence motif and maximum entropy based splice site consensus predictions")
+parser_vep_region_post.add_argument('--NMD', action="store_const", const=1,
+                                 help="Predicts if a variant allows the transcript escape nonsense-mediated mRNA decay.")
+parser_vep_region_post.add_argument('--Phenotypes', action="store_const",
+                                 const=1, help="Retrieves overlapping phenotype information")
+parser_vep_region_post.add_argument('--SpliceAI', type=int, help="""Retrieves pre-calculated annotations from SpliceAI a deep neural network, developed by Illumina, Inc that predicts splice junctions from an arbitrary pre-mRNA transcript sequence. Used for non-commercial purposes. (plugin details)
+The pre-calculated annotations for all possible single nucleotide substitutions can be retrieved from: value 1) Ensembl/GENCODE v24 canonical transcripts (masked scores); value 2) Ensembl/GENCODE v37 MANE transcripts (raw scores).
+Note: The pre-calculated annotations for 1 base insertions, and 1-4 base deletions are only available for Ensembl/GENCODE v24 canonical transcripts.""")
 parser_vep_region_post.add_argument(
-    '--DisGeNET', action="store_const", const=1)
-parser_vep_region_post.add_argument('--EVE', action="store_const", const=1)
-parser_vep_region_post.add_argument('--GO', action="store_const", const=1)
+    '--UTRAnnotator', action="store_const", const=1, help="Annotates high-impact five prime UTR variants either creating new upstream ORFs or disrupting existing upstream ORFs")
 parser_vep_region_post.add_argument(
-    '--GeneSplicer', action="store_const", const=1)
-parser_vep_region_post.add_argument('--IntAct', action="store_const", const=1)
-parser_vep_region_post.add_argument('--LoF', action="store_const", const=1)
+    '--appris', action="store_const", const=1, help="Include APPRIS isoform annotation")
 parser_vep_region_post.add_argument(
-    '--Mastermind', action="store_const", const=1)
+    '--callback', help="Name of the callback subroutine to be returned by the requested JSONP response. Required ONLY when using JSONP as the serialisation method.")
+parser_vep_region_post.add_argument('--canonical', action="store_const", const=1,
+                                 help="Include a flag indicating the canonical transcript for a gene")
 parser_vep_region_post.add_argument(
-    '--MaxEntScan', action="store_const", const=1)
-parser_vep_region_post.add_argument('--NMD', action="store_const", const=1)
+    '--ccds', action="store_const", const=1, help="Include CCDS transcript identifiers")
 parser_vep_region_post.add_argument(
-    '--Phenotypes', action="store_const", const=1)
-parser_vep_region_post.add_argument('--SpliceAI', type=int)
+    '--dbNSFP', help="Include fields from dbNSFP, a database of pathogenicity predictions for missense variants. Multiple fields should be separated by commas.")
+parser_vep_region_post.add_argument('--dbscSNV', action="store_const",
+                                 const=1, help="Predictions for splicing variants from dbscSNV.")
 parser_vep_region_post.add_argument(
-    '--UTRAnnotator', action="store_const", const=1)
-parser_vep_region_post.add_argument('--appris', action="store_const", const=1)
-parser_vep_region_post.add_argument('--callback')
+    '--distance', type=int, help="Change the distance to transcript for which VEP assigns upstream and downstream consequences")
+parser_vep_region_post.add_argument('--domains', action="store_const",
+                                 const=1, help="Include names of overlapping protein domains")
+parser_vep_region_post.add_argument('--failed', action="store_const", const=1,
+                                 help="When checking for co-located variants, by default variants flagged as failed by Ensembl's QC pipeline will be excluded. Set this flag to 1 to include such variants")
+parser_vep_region_post.add_argument('--hgvs', action="store_const", const=1,
+                                 help="Include HGVS nomenclature based on Ensembl stable identifiers")
+parser_vep_region_post.add_argument('--mane', action="store_const",
+                                 const=1, help="Include MANE Select annotations (GRCh38 only)")
+parser_vep_region_post.add_argument('--merged', action="store_const", const=1,
+                                 help="Use merged Ensembl and RefSeq transcript set to report consequences (human only)")
+parser_vep_region_post.add_argument('--minimal', action="store_const", const=1, help="Convert alleles to their most minimal representation before consequence calculation i.e. sequence that is identical between each pair of reference and alternate alleles is trimmed off from both ends, with coordinates adjusted accordingly. Note this may lead to discrepancies between input coordinates and coordinates reported by VEP relative to transcript sequences")
+parser_vep_region_post.add_argument('--mirna', action="store_const", const=1,
+                                 help="Determines where in the secondary structure of a miRNA a variant falls")
+parser_vep_region_post.add_argument('--mutfunc', action="store_const", const=1,
+                                 help="Predicts destabilization effect of protein structure, interaction, regulatory region etc. caused by a variant as reported by mutfunc database.")
+parser_vep_region_post.add_argument('--numbers', action="store_const", const=1,
+                                 help="Include affected exon and intron positions within the transcript")
 parser_vep_region_post.add_argument(
-    '--canonical', action="store_const", const=1)
-parser_vep_region_post.add_argument('--ccds', action="store_const", const=1)
-parser_vep_region_post.add_argument('--dbNSFP')
-parser_vep_region_post.add_argument('--dbscSNV', action="store_const", const=1)
-parser_vep_region_post.add_argument('--distance', type=int)
-parser_vep_region_post.add_argument('--domains', action="store_const", const=1)
-parser_vep_region_post.add_argument('--failed', action="store_const", const=1)
-parser_vep_region_post.add_argument('--hgvs', action="store_const", const=1)
-parser_vep_region_post.add_argument('--mane', action="store_const", const=1)
-parser_vep_region_post.add_argument('--merged', action="store_const", const=1)
-parser_vep_region_post.add_argument('--minimal', action="store_const", const=1)
-parser_vep_region_post.add_argument('--mirna', action="store_const", const=1)
-parser_vep_region_post.add_argument('--mutfunc', action="store_const", const=1)
-parser_vep_region_post.add_argument('--numbers', action="store_const", const=1)
-parser_vep_region_post.add_argument('--protein', action="store_const", const=1)
-parser_vep_region_post.add_argument('--refseq', action="store_const", const=1)
+    '--protein', action="store_const", const=1, help="Include Ensembl protein identifiers")
+parser_vep_region_post.add_argument('--refseq', action="store_const", const=1,
+                                 help="Use RefSeq transcript set to report consequences (human only)")
 parser_vep_region_post.add_argument(
-    '--shift_3prime', action="store_const", const=1)
+    '--shift_3prime', action="store_const", const=1, help="Shift transcript-overlapping variants as far as possible in the 3' direction before providing consequences")
 parser_vep_region_post.add_argument(
-    '--shift_genomic', action="store_const", const=1)
-parser_vep_region_post.add_argument('--transcript_id')
-parser_vep_region_post.add_argument('--transcript_version',
-                                    action="store_const", const=1)
-parser_vep_region_post.add_argument('--tsl', action="store_const", const=1)
-parser_vep_region_post.add_argument('--uniprot', action="store_const", const=1)
+    '--shift_genomic', action="store_const", const=1, help="Shift all variants as far as possible in the 3' direction before providing consequences")
 parser_vep_region_post.add_argument(
-    '--variant_class', action="store_const", const=1)
+    '--transcript_id', help="Filter results by Transcript ID")
 parser_vep_region_post.add_argument(
-    '--vcf_string', action="store_const", const=1)
+    '--transcript_version', action="store_const", const=1, help="Add version numbers to Ensembl transcript identifiers")
+parser_vep_region_post.add_argument('--tsl', action="store_const",
+                                 const=1, help="Include transcript support level (TSL) annotation")
+parser_vep_region_post.add_argument('--uniprot', action="store_const", const=1,
+                                 help="Include best match accessions for translated protein products from three UniProt-related databases (SWISSPROT, TREMBL and UniParc)")
 parser_vep_region_post.add_argument(
-    '--xref_refseq', action="store_const", const=1)
+    '--variant_class', action="store_const", const=1, help="Output the Sequence Ontology variant class for the input variant")
+parser_vep_region_post.add_argument(
+    '--vcf_string', action="store_const", const=1, help="Include alleles in VCF format")
+parser_vep_region_post.add_argument(
+    '--xref_refseq', action="store_const", const=1, help="Include aligned RefSeq mRNA identifiers for transcript. NB: theRefSeq and Ensembl transcripts aligned in this way MAY NOT, AND FREQUENTLY WILL NOT, match exactly in sequence, exon structure and protein product")
 # ---------------------------------------------------------------------------------------------
 parser_variation_get.set_defaults(func=variation)
 parser_variation_post.set_defaults(func=variation)
